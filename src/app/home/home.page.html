@@ -1,0 +1,32 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>
+      Video Player
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+
+
+  <div class="parent">
+    <div class="div1">
+      <div #videoContainer>
+        <youtube-player
+          [videoId]="id"
+          (ready)="savePlayer($event)"
+          (change)="onStateChange($event)"
+        ></youtube-player>
+        <p>Watch Time: {{ getFormattedWatchTime() }}</p>
+      </div> 
+
+
+    </div>
+    <div class="div2">
+     div 2
+    </div>
+    <div class="div3">div 3</div>
+</div>
+    
+ 
+</ion-content>
