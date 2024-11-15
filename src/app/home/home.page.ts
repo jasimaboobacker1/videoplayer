@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/angular/standalone';
 import { YoutubePlayerComponent } from 'ngx-youtube-player';
 import { CommonModule } from '@angular/common';
@@ -10,10 +10,12 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [IonHeader, IonToolbar, IonTitle, IonContent, YoutubePlayerComponent, CommonModule],
 })
-export class HomePage implements AfterViewInit {
+
+
+export class HomePage implements AfterViewInit, OnDestroy {
   @ViewChild('videoContainer', { static: false }) videoContainer!: ElementRef;
 
-  id: string = 'gCRCXf7XTXk'; 
+  id: string = 'gCRCXf7XTXk';
   player!: YT.Player;
   watchTimeInSeconds: number = 0;
   timerInterval: any;
@@ -24,11 +26,15 @@ export class HomePage implements AfterViewInit {
   ngAfterViewInit() {
     this.setDynamicDimensions();
     window.addEventListener('resize', this.setDynamicDimensions.bind(this));
+
+    const savedTime = localStorage.getItem(`watchTime-${this.id}`);
+    if (savedTime) {
+      this.watchTimeInSeconds = parseFloat(savedTime);
+    }
   }
 
   setDynamicDimensions() {
     const container = this.videoContainer.nativeElement;
-    // Set the video player size dynamically
     const containerWidth = container.offsetWidth;
     const containerHeight = container.offsetHeight;
 
@@ -39,7 +45,11 @@ export class HomePage implements AfterViewInit {
 
   savePlayer(player: YT.Player) {
     this.player = player;
-    this.setDynamicDimensions(); // Ensure dimensions are set when player is ready
+    this.setDynamicDimensions();
+
+    if (this.watchTimeInSeconds > 0) {
+      this.player.seekTo(this.watchTimeInSeconds, true);
+    }
     console.log('Player instance', player);
   }
 
@@ -64,6 +74,7 @@ export class HomePage implements AfterViewInit {
       if (this.player) {
         this.watchTimeInSeconds = this.player.getCurrentTime();
         console.log('Current watch time:', this.watchTimeInSeconds);
+        this.saveWatchTime();
       }
     }, 1000);
   }
@@ -73,6 +84,7 @@ export class HomePage implements AfterViewInit {
   }
 
   saveWatchTime() {
+    localStorage.setItem(`watchTime-${this.id}`, this.watchTimeInSeconds.toString());
     console.log('Saved Watch Time:', this.watchTimeInSeconds);
   }
 
@@ -80,5 +92,10 @@ export class HomePage implements AfterViewInit {
     const minutes = Math.floor(this.watchTimeInSeconds / 60);
     const seconds = Math.floor(this.watchTimeInSeconds % 60);
     return `${minutes} minutes ${seconds} seconds`;
+  }
+
+  ngOnDestroy() {
+    this.saveWatchTime();
+    window.removeEventListener('resize', this.setDynamicDimensions.bind(this));
   }
 }
